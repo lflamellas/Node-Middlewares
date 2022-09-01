@@ -10,19 +10,38 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const {username} = request.headers
+  const user = users.find(customer => customer.username === username)
+  if (!user) return response.status(404).json({ error: "Username does not exist." })
+  request.user = user
+  return next()
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const {user} = request
+  if (user.pro || user.todos.length < 10) return next()
+  return response.status(403).json({error:"Maximum list size reached. Please upgrade your plan."})
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const {username} = request.headers
+  const {id} = request.params
+  const user = users.find(user => user.username === username)
+  if(!user) return response.status(404).json({error: "User does not exist."})
+  if(!validate(id)) return response.status(400).json({error:"ToDo ID is not valid."})
+  const task = user.todos.find(task => task.id === id)
+  if(!task) return response.status(404).json({error: "ToDo does not exist."})
+  request.todo = task
+  request.user = user
+  return next()
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const {id} = request.params
+  const user = users.find(user => user.id === id)
+  if(!user) return response.status(404).json({error:"User does not exist."})
+  request.user = user
+  return next()
 }
 
 app.post('/users', (request, response) => {
